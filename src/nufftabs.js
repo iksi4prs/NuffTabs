@@ -58,7 +58,7 @@ async function init() {
     LS.setItem('ignorePinned', 1);
   }
   if (await LS.getItem('showCount') == undefined) {
-    LS.setItem(showCount, 1);
+    LS.setItem('showCount', 1);
   }
   
   updateCurrentTabId();
