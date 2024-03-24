@@ -1,115 +1,44 @@
+// TODO - move file to storage.js ?
+// see how "idb" exported in source code of umd.js
+// To check content of db in devtools,
+// need check 'storage' via badge, NOT via worker.
+// Reminder: we don't need the storage permission to use IndexedDB.
 
-// note:
-// !!! SO LATER REMOVE !!!
-// we don't need the storage permission to use IndexedDB.
-
-// to check content of db in devtools, need check 'storage' via
-// badge, NOT via worker.
+// storage warpper - using IndexedDB
+// 'chrome.storage.local' (see why moved to it below),
+// doesn't show in devtools (see: https://stackoverflow.com/a/27432365),
+// which is annoying to use/debug, so moved to use IndexedDB,
+// using lib called "idb" (see umd.js)
 let db = null;
-//var dbError = false;
 
-//import { openDB, wrap, unwrap } from './libs/umd.js';
 import './libs/umd.js';
 
-
-
-async function get1(key) {
+async function LS_getItem(key) {
   return (await db).get('dictionary1', key);
 }
-async function set1(key, val) {
+async function LS_setItem(key, val) {
   return (await db).put('dictionary1', val, key);
 }
-/*
-async function IDB_openDatabase(name) {
-
-    const request = indexedDB.open(name);
-    // for popup need to add window. ?
-    //const request = window.indexedDB.open(name);
-
-    request.onerror = function (event) {
-        console.error("Problem opening DB.");
-        dbError = true;
-    };
-
-    // request.onupgradeneeded = function (event) {
-    //     db = event.target.result;
-    //     const objectStore = db.createObjectStore('table1', { keyPath: 'key' });
-    //     objectStore.transaction.oncomplete = function (event) {
-    //         console.log("ObjectStore Created.");
-    //     };
-    //     initImpl();
-    // };
-
-    request.onsuccess = function (event) {
-        db = event.target.result;
-        console.log("DB OPENED.");
-        initImpl();
-    };
+async function openDatabase() {
+  var version = 1;
+  db = await idb.openDB('NuffTabs', 1, {
+    upgrade(db) {
+      db.createObjectStore('dictionary1');
+    },
+  });
 }
 
-
-// https://filipvitas.medium.com/indexeddb-with-promises-and-async-await-3d047dddd313
-// https://developer.mozilla.org/en-US/docs/Web/API/IDBRequest/result
-async function IDB_getItem(key){
-  if (db) {
-    const tx = db.transaction('table1', 'readwrite');
-    const store  = tx.objectStore('table1');
-    const item = await store.get(key);
-    //await request;
-    //await tx.complete;
-    return item.result;
-    getRequest.onsuccess = await function (event) {
-        const existingRecord = event.target.result;
-        if (existingRecord) {
-            return resolve(event.target.result);
-            //return existingRecord.value;
-        } else {
-         return undefined;
-        }
-    };
-}
-}
-function IDB_setItem(key, value) {
-  if (db) {
-      const updateTransaction = db.transaction('table1', 'readwrite');
-      const objectStore = updateTransaction.objectStore('table1');
-      const getRequest = objectStore.get(key);
-      getRequest.onsuccess = function (event) {
-          const existingRecord = event.target.result;
-          if (existingRecord) {
-              existingRecord.value = value;
-              const putRequest = objectStore.put(existingRecord);
-              putRequest.onsuccess = function () {
-                  console.log("Record updated:", existingRecord);
-              };
-          } else {
-            const request = objectStore.add({ key: key, value: value });
-            request.onsuccess = function () {
-                console.log("Added:" + key + ", " + value);
-            };
-          }
-      };
-  }
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-*/
-// storage wrapper
+// storage wrapper - using 'chrome.storage.local'
 // (migration to manifest v3 required moving from 'localStorage' to 'chrome.storage.local')
 // https://stackoverflow.com/a/70708120
+/*
 const LS = {
   getAllItems: () => chrome.storage.local.get(),
   getItem: async key => (await chrome.storage.local.get(key))[key],
   setItem: (key, val) => chrome.storage.local.set({[key]: val}),
   removeItems: keys => chrome.storage.local.remove(keys),
 };
-
-//var dbName = "NuffTabs";
-//var open = indexedDB.open(dbName, 1);
-
-//import './storage.js'
+*/
 
 // variables
 var currentTabId; // ID of currently active tab
@@ -145,56 +74,24 @@ function printTimes() {
   });
 }
 
-// initialize
- async function openDatabase() {
-    var version = 1;
-    db = await idb.openDB('NuffTabs', 1, {
-      upgrade(db) {
-        db.createObjectStore('dictionary1');
-      },
-    });
-}
-
 async function init() {
   await openDatabase();
-   //IDB_openDatabase("NuffTabs");
-   //db = await idb.openDB("NuffTabs");
-   await set1("key23", "7779");
-   var xx = await get1("key23");
-   console.log("xx = " + xx);
- //}
-
-//async function initImpl() {  
-  //openDatabase("NuffTabs");
-  // for(var i=0; i<10000; i++){
-  //   if (db != null)
-  //     break;
-  //   if (dbError == true){
-  //     console.error("failed to open db, error.");
-  //     return;
-  //   }
-  //   sleep(10);
-  // }
-  // if (db == null){
-  //   console.error("failed to open db, timeout.");
-  //   return;
-  // }
-  //IDB_setItem("key22","val55")
-  //var x = await IDB_getItem("key22");
-  //console.log("x = " + x);
+  await LS_setItem("key23", "8001");
+  var xx = await LS_getItem("key23");
+  console.log("xx = " + xx);
 
   // set defaults
-  if (await LS.getItem('discardCriterion') == undefined) {
-    LS.setItem('discardCriterion', 'oldest');
+  if (await LS_getItem('discardCriterion') == undefined) {
+    LS_setItem('discardCriterion', 'oldest');
   }
-  if (await LS.getItem('maxTabs') == undefined) {
-    LS.setItem('maxTabs', 10); // default
+  if (await LS_getItem('maxTabs') == undefined) {
+    LS_setItem('maxTabs', 10); // default
   }
-  if (await LS.getItem('ignorePinned') == undefined) {
-    LS.setItem('ignorePinned', 1);
+  if (await LS_getItem('ignorePinned') == undefined) {
+    LS_setItem('ignorePinned', 1);
   }
-  if (await LS.getItem('showCount') == undefined) {
-    LS.setItem('showCount', 1);
+  if (await LS_getItem('showCount') == undefined) {
+    LS_setItem('showCount', 1);
   }
   
   updateCurrentTabId();
@@ -220,11 +117,11 @@ function createTimes(tabId) {
 
 // update count on badge (only valid for active window)
 async function updateBadge() {
-  if (await LS.getItem('showCount') == '1'){
+  if (await LS_getItem('showCount') == '1'){
     chrome.action.setBadgeBackgroundColor({ color: [0, 0, 0, 92] });
     
     chrome.tabs.query({ lastFocusedWindow: true }, async function(tabs) {
-      if (await LS.getItem('ignorePinned') == '1') {
+      if (await LS_getItem('ignorePinned') == '1') {
         tabs = tabs.filter(function (tab) {
           return !tab.pinned;
         });
@@ -288,7 +185,7 @@ function checkTabAdded(newTabId) {
   // check tabs of current window
   chrome.tabs.query({ currentWindow: true }, async function(tabs) {
 
-    if (await LS.getItem('ignorePinned') == '1') {
+    if (await LS_getItem('ignorePinned') == '1') {
       tabs = tabs.filter(function (tab) {
         return !tab.pinned;
       });
@@ -297,7 +194,7 @@ function checkTabAdded(newTabId) {
     // debugLog("num of tabs: " +tabs.length)
     
     // tab removal criterion
-    maxTabs = await LS.getItem('maxTabs');
+    maxTabs = await LS_getItem('maxTabs');
     while (tabs.length > maxTabs) {
       debugLog("New tab: "+newTabId)
       debugLog("Preparing to remove tab...")
@@ -307,7 +204,7 @@ function checkTabAdded(newTabId) {
       if (tabs[tabInd].id == newTabId) {
         tabInd = 1;
       }
-      switch(await LS.getItem('discardCriterion')) {
+      switch(await LS_getItem('discardCriterion')) {
 
         case 'oldest': // oldest tab
           for (var i=0; i<tabs.length; i++) {

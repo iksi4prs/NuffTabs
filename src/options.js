@@ -1,19 +1,34 @@
-// storage wrapper
-// (migration to manifest v3 required moving from 'localStorage' to 'chrome.storage.local')
-// https://stackoverflow.com/a/70708120
-const LS = {
-    getAllItems: () => chrome.storage.local.get(),
-    getItem: async key => (await chrome.storage.local.get(key))[key],
-    setItem: (key, val) => chrome.storage.local.set({[key]: val}),
-    removeItems: keys => chrome.storage.local.remove(keys),
-  };
+// see notes about storage/database in the worker js.
+// storage, using IndexedDB
+// add comments....
+async function LS_getItem(key) {
+	return (await db).get('dictionary1', key);
+}
+
+async function LS_setItem(key, val) {
+	return (await db).put('dictionary1', val, key);
+}
+
+async function openDatabase() {
+    var version = 1;
+    db = await idb.openDB('NuffTabs', 1, {
+      upgrade(db) {
+        db.createObjectStore('dictionary1');
+      },
+    });
+}
 
 // fill in selected options
 async function init() {
-	var maxTabs = await LS.getItem('maxTabs');
-	var discardCriterion = await LS.getItem('discardCriterion');
-	var ignorePinned = await LS.getItem('ignorePinned');
-	var showCount = await LS.getItem('showCount');
+	await openDatabase();
+
+	var xx = await LS_getItem("key23");
+	console.log("xx FRM OPTIONS = " + xx);
+
+	var maxTabs = await LS_getItem('maxTabs');
+	var discardCriterion = await LS_getItem('discardCriterion');
+	var ignorePinned = await LS_getItem('ignorePinned');
+	var showCount = await LS_getItem('showCount');
 	
 	if (!maxTabs && !discardCriterion && !ignorePinned && !showCount) {
 		return;
@@ -57,10 +72,10 @@ async function init() {
 }
 
 function saveMe() {
-	LS.setItem('maxTabs', document.getElementById("maxTabs").value);
-	LS.setItem('discardCriterion', document.getElementById("discardCriterion").value);
-	LS.setItem('ignorePinned', document.getElementById("ignorePinned").value);
-	LS.setItem('showCount', document.getElementById("showCount").value);
+	LS_setItem('maxTabs', document.getElementById("maxTabs").value);
+	LS_setItem('discardCriterion', document.getElementById("discardCriterion").value);
+	LS_setItem('ignorePinned', document.getElementById("ignorePinned").value);
+	LS_setItem('showCount', document.getElementById("showCount").value);
 	document.getElementById('messages').innerHTML = "Options saved.";
 	setTimeout(function() {
 		document.getElementById('messages').innerHTML = "";
