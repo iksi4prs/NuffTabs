@@ -1,3 +1,15 @@
+// storage wrapper
+// (migration to manifest v3 required moving from 'localStorage' to 'chrome.storage.local')
+// https://stackoverflow.com/a/70708120
+const LS = {
+  getAllItems: () => chrome.storage.local.get(),
+  getItem: async key => (await chrome.storage.local.get(key))[key],
+  setItem: (key, val) => chrome.storage.local.set({[key]: val}),
+  removeItems: keys => chrome.storage.local.remove(keys),
+};
+
+import './storage.js'
+
 // variables
 var currentTabId; // ID of currently active tab
 var maxTabs; // maximum number of tabs allowed per window
@@ -33,20 +45,20 @@ function printTimes() {
 }
 
 // initialize
-function init() {
+async function init() {
 
   // set defaults
-  if (localStorage.discardCriterion == undefined) {
-    localStorage.discardCriterion = 'oldest';
+  if (await LS.getItem('discardCriterion') == undefined) {
+    LS.setItem('discardCriterion', 'oldest');
   }
-  if (localStorage.maxTabs == undefined) {
-    localStorage.maxTabs = 10; // default
+  if (await LS.getItem('maxTabs') == undefined) {
+    LS.setItem('maxTabs', 10); // default
   }
-  if (localStorage.ignorePinned == undefined) {
-    localStorage.ignorePinned = 1;
+  if (await LS.getItem('ignorePinned') == undefined) {
+    LS.setItem('ignorePinned', 1);
   }
-  if (localStorage.showCount == undefined) {
-    localStorage.showCount = 1;
+  if (await LS.getItem('showCount') == undefined) {
+    LS.setItem(showCount, 1);
   }
   
   updateCurrentTabId();
@@ -71,21 +83,21 @@ function createTimes(tabId) {
 }
 
 // update count on badge (only valid for active window)
-function updateBadge() {
-  if (localStorage.showCount == '1'){
-    chrome.browserAction.setBadgeBackgroundColor({ color: [0, 0, 0, 92] });
+async function updateBadge() {
+  if (await LS.getItem('showCount') == '1'){
+    chrome.action.setBadgeBackgroundColor({ color: [0, 0, 0, 92] });
     
-    chrome.tabs.query({ lastFocusedWindow: true }, function(tabs) {
-      if (localStorage.ignorePinned == '1') {
+    chrome.tabs.query({ lastFocusedWindow: true }, async function(tabs) {
+      if (await LS.getItem('ignorePinned') == '1') {
         tabs = tabs.filter(function (tab) {
           return !tab.pinned;
         });
       }
-      chrome.browserAction.setBadgeText({ text: tabs.length.toString()});
+      chrome.action.setBadgeText({ text: tabs.length.toString()});
     });
   }
   else {
-    chrome.browserAction.setBadgeText({ text: ''});
+    chrome.action.setBadgeText({ text: ''});
   }
 }
 
@@ -138,9 +150,9 @@ function updateCurrentTabId() {
 function checkTabAdded(newTabId) {
   
   // check tabs of current window
-  chrome.tabs.query({ currentWindow: true }, function(tabs) {
+  chrome.tabs.query({ currentWindow: true }, async function(tabs) {
 
-    if (localStorage.ignorePinned == '1') {
+    if (await LS.getItem('ignorePinned') == '1') {
       tabs = tabs.filter(function (tab) {
         return !tab.pinned;
       });
@@ -149,7 +161,8 @@ function checkTabAdded(newTabId) {
     // debugLog("num of tabs: " +tabs.length)
     
     // tab removal criterion
-    while (tabs.length > localStorage.maxTabs) {
+    maxTabs = await LS.getItem('maxTabs');
+    while (tabs.length > maxTabs) {
       debugLog("New tab: "+newTabId)
       debugLog("Preparing to remove tab...")
       printTimes();
@@ -158,7 +171,7 @@ function checkTabAdded(newTabId) {
       if (tabs[tabInd].id == newTabId) {
         tabInd = 1;
       }
-      switch(localStorage.discardCriterion) {
+      switch(await LS.getItem('discardCriterion')) {
 
         case 'oldest': // oldest tab
           for (var i=0; i<tabs.length; i++) {
@@ -272,4 +285,4 @@ chrome.windows.onFocusChanged.addListener(function(windowId) {
   updateBadge();
 });
 
-window.addEventListener("load", init);
+init();
