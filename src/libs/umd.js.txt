@@ -4,5 +4,5 @@ Wrapper for IndexedDB.
 Source:
 https://github.com/jakearchibald/idb
 
-This version:
+Used file was downloaded from url":
 https://cdn.jsdelivr.net/npm/idb@8/build/umd.js
