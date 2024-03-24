@@ -21,10 +21,6 @@ async function openDatabase() {
 // fill in selected options
 async function init() {
 	await openDatabase();
-
-	var xx = await LS_getItem("key23");
-	console.log("xx FRM OPTIONS = " + xx);
-
 	var maxTabs = await LS_getItem('maxTabs');
 	var discardCriterion = await LS_getItem('discardCriterion');
 	var ignorePinned = await LS_getItem('ignorePinned');

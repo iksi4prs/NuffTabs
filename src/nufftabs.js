@@ -76,9 +76,12 @@ function printTimes() {
 
 async function init() {
   await openDatabase();
-  await LS_setItem("key23", "8001");
-  var xx = await LS_getItem("key23");
-  console.log("xx = " + xx);
+  
+  { // for debug/tests
+    await LS_setItem("test", "8021");
+    var test = await LS_getItem("test");
+    console.log("test = " + test);
+  }
 
   // set defaults
   if (await LS_getItem('discardCriterion') == undefined) {
