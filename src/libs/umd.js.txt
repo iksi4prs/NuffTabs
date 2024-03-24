@@ -1,0 +1,8 @@
+
+Wrapper for IndexedDB.
+
+Source:
+https://github.com/jakearchibald/idb
+
+This version:
+https://cdn.jsdelivr.net/npm/idb@8/build/umd.js

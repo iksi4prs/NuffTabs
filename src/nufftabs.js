@@ -1,3 +1,101 @@
+
+// note:
+// !!! SO LATER REMOVE !!!
+// we don't need the storage permission to use IndexedDB.
+
+// to check content of db in devtools, need check 'storage' via
+// badge, NOT via worker.
+let db = null;
+//var dbError = false;
+
+//import { openDB, wrap, unwrap } from './libs/umd.js';
+import './libs/umd.js';
+
+
+
+async function get1(key) {
+  return (await db).get('dictionary1', key);
+}
+async function set1(key, val) {
+  return (await db).put('dictionary1', val, key);
+}
+/*
+async function IDB_openDatabase(name) {
+
+    const request = indexedDB.open(name);
+    // for popup need to add window. ?
+    //const request = window.indexedDB.open(name);
+
+    request.onerror = function (event) {
+        console.error("Problem opening DB.");
+        dbError = true;
+    };
+
+    // request.onupgradeneeded = function (event) {
+    //     db = event.target.result;
+    //     const objectStore = db.createObjectStore('table1', { keyPath: 'key' });
+    //     objectStore.transaction.oncomplete = function (event) {
+    //         console.log("ObjectStore Created.");
+    //     };
+    //     initImpl();
+    // };
+
+    request.onsuccess = function (event) {
+        db = event.target.result;
+        console.log("DB OPENED.");
+        initImpl();
+    };
+}
+
+
+// https://filipvitas.medium.com/indexeddb-with-promises-and-async-await-3d047dddd313
+// https://developer.mozilla.org/en-US/docs/Web/API/IDBRequest/result
+async function IDB_getItem(key){
+  if (db) {
+    const tx = db.transaction('table1', 'readwrite');
+    const store  = tx.objectStore('table1');
+    const item = await store.get(key);
+    //await request;
+    //await tx.complete;
+    return item.result;
+    getRequest.onsuccess = await function (event) {
+        const existingRecord = event.target.result;
+        if (existingRecord) {
+            return resolve(event.target.result);
+            //return existingRecord.value;
+        } else {
+         return undefined;
+        }
+    };
+}
+}
+function IDB_setItem(key, value) {
+  if (db) {
+      const updateTransaction = db.transaction('table1', 'readwrite');
+      const objectStore = updateTransaction.objectStore('table1');
+      const getRequest = objectStore.get(key);
+      getRequest.onsuccess = function (event) {
+          const existingRecord = event.target.result;
+          if (existingRecord) {
+              existingRecord.value = value;
+              const putRequest = objectStore.put(existingRecord);
+              putRequest.onsuccess = function () {
+                  console.log("Record updated:", existingRecord);
+              };
+          } else {
+            const request = objectStore.add({ key: key, value: value });
+            request.onsuccess = function () {
+                console.log("Added:" + key + ", " + value);
+            };
+          }
+      };
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+*/
 // storage wrapper
 // (migration to manifest v3 required moving from 'localStorage' to 'chrome.storage.local')
 // https://stackoverflow.com/a/70708120
@@ -8,7 +106,10 @@ const LS = {
   removeItems: keys => chrome.storage.local.remove(keys),
 };
 
-import './storage.js'
+//var dbName = "NuffTabs";
+//var open = indexedDB.open(dbName, 1);
+
+//import './storage.js'
 
 // variables
 var currentTabId; // ID of currently active tab
@@ -45,7 +146,42 @@ function printTimes() {
 }
 
 // initialize
+ async function openDatabase() {
+    var version = 1;
+    db = await idb.openDB('NuffTabs', 1, {
+      upgrade(db) {
+        db.createObjectStore('dictionary1');
+      },
+    });
+}
+
 async function init() {
+  await openDatabase();
+   //IDB_openDatabase("NuffTabs");
+   //db = await idb.openDB("NuffTabs");
+   await set1("key23", "7779");
+   var xx = await get1("key23");
+   console.log("xx = " + xx);
+ //}
+
+//async function initImpl() {  
+  //openDatabase("NuffTabs");
+  // for(var i=0; i<10000; i++){
+  //   if (db != null)
+  //     break;
+  //   if (dbError == true){
+  //     console.error("failed to open db, error.");
+  //     return;
+  //   }
+  //   sleep(10);
+  // }
+  // if (db == null){
+  //   console.error("failed to open db, timeout.");
+  //   return;
+  // }
+  //IDB_setItem("key22","val55")
+  //var x = await IDB_getItem("key22");
+  //console.log("x = " + x);
 
   // set defaults
   if (await LS.getItem('discardCriterion') == undefined) {
