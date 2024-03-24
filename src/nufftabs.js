@@ -1,34 +1,33 @@
-// TODO - move file to storage.js ?
-// see how "idb" exported in source code of umd.js
-// To check content of db in devtools,
-// need check 'storage' via badge, NOT via worker.
-// Reminder: we don't need the storage permission to use IndexedDB.
-
-// storage warpper - using IndexedDB
+// storage warpper v#2 - using IndexedDB
 // 'chrome.storage.local' (see why moved to it below),
 // doesn't show in devtools (see: https://stackoverflow.com/a/27432365),
 // which is annoying to use/debug, so moved to use IndexedDB,
 // using lib called "idb" (see umd.js)
-let db = null;
-
 import './libs/umd.js';
+let db = null;
+const LS =  {
+  openDatabase: async () => {
+    var version = 1;
+    db = await idb.openDB('NuffTabs', 1, {
+      upgrade(db) {
+        db.createObjectStore('dictionary1');
+      },
+    });},
+  getItem: async key => {
+    if (db == null){
+      await LS.openDatabase();
+    }
+    return (await db).get('dictionary1', key);
+  },
+  setItem: async (key, val) => {
+    if (db == null){
+      await LS.openDatabase();
+    }
+    (await db).put('dictionary1', val, key);
+  },
+};
 
-async function LS_getItem(key) {
-  return (await db).get('dictionary1', key);
-}
-async function LS_setItem(key, val) {
-  return (await db).put('dictionary1', val, key);
-}
-async function openDatabase() {
-  var version = 1;
-  db = await idb.openDB('NuffTabs', 1, {
-    upgrade(db) {
-      db.createObjectStore('dictionary1');
-    },
-  });
-}
-
-// storage wrapper - using 'chrome.storage.local'
+// storage wrapper v#1 - using 'chrome.storage.local'
 // (migration to manifest v3 required moving from 'localStorage' to 'chrome.storage.local')
 // https://stackoverflow.com/a/70708120
 /*
@@ -75,26 +74,26 @@ function printTimes() {
 }
 
 async function init() {
-  await openDatabase();
+  //await openDatabase();
   
   { // for debug/tests
-    await LS_setItem("test", "8021");
-    var test = await LS_getItem("test");
+    await LS.setItem("test", "8021");
+    var test = await LS.getItem("test");
     console.log("test = " + test);
   }
 
   // set defaults
-  if (await LS_getItem('discardCriterion') == undefined) {
-    LS_setItem('discardCriterion', 'oldest');
+  if (await LS.getItem('discardCriterion') == undefined) {
+    LS.setItem('discardCriterion', 'oldest');
   }
-  if (await LS_getItem('maxTabs') == undefined) {
-    LS_setItem('maxTabs', 10); // default
+  if (await LS.getItem('maxTabs') == undefined) {
+    LS.setItem('maxTabs', 10); // default
   }
-  if (await LS_getItem('ignorePinned') == undefined) {
-    LS_setItem('ignorePinned', 1);
+  if (await LS.getItem('ignorePinned') == undefined) {
+    LS.setItem('ignorePinned', 1);
   }
-  if (await LS_getItem('showCount') == undefined) {
-    LS_setItem('showCount', 1);
+  if (await LS.getItem('showCount') == undefined) {
+    LS.setItem('showCount', 1);
   }
   
   updateCurrentTabId();
@@ -120,11 +119,11 @@ function createTimes(tabId) {
 
 // update count on badge (only valid for active window)
 async function updateBadge() {
-  if (await LS_getItem('showCount') == '1'){
+  if (await LS.getItem('showCount') == '1'){
     chrome.action.setBadgeBackgroundColor({ color: [0, 0, 0, 92] });
     
     chrome.tabs.query({ lastFocusedWindow: true }, async function(tabs) {
-      if (await LS_getItem('ignorePinned') == '1') {
+      if (await LS.getItem('ignorePinned') == '1') {
         tabs = tabs.filter(function (tab) {
           return !tab.pinned;
         });
@@ -188,7 +187,7 @@ function checkTabAdded(newTabId) {
   // check tabs of current window
   chrome.tabs.query({ currentWindow: true }, async function(tabs) {
 
-    if (await LS_getItem('ignorePinned') == '1') {
+    if (await LS.getItem('ignorePinned') == '1') {
       tabs = tabs.filter(function (tab) {
         return !tab.pinned;
       });
@@ -197,7 +196,7 @@ function checkTabAdded(newTabId) {
     // debugLog("num of tabs: " +tabs.length)
     
     // tab removal criterion
-    maxTabs = await LS_getItem('maxTabs');
+    maxTabs = await LS.getItem('maxTabs');
     while (tabs.length > maxTabs) {
       debugLog("New tab: "+newTabId)
       debugLog("Preparing to remove tab...")
@@ -207,7 +206,7 @@ function checkTabAdded(newTabId) {
       if (tabs[tabInd].id == newTabId) {
         tabInd = 1;
       }
-      switch(await LS_getItem('discardCriterion')) {
+      switch(await LS.getItem('discardCriterion')) {
 
         case 'oldest': // oldest tab
           for (var i=0; i<tabs.length; i++) {

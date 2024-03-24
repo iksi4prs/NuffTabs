@@ -1,30 +1,35 @@
-// see notes about storage/database in the worker js.
-// storage, using IndexedDB
-// add comments....
-async function LS_getItem(key) {
-	return (await db).get('dictionary1', key);
-}
+// see notes about storage/database in the js file of worker.
+// TODO (low prio)- move 2 copies of LS to one file.
+let db = null;
+const LS =  {
+	openDatabase: async () => {
+	  var version = 1;
+	  db = await idb.openDB('NuffTabs', 1, {
+		upgrade(db) {
+		  db.createObjectStore('dictionary1');
+		},
+	  });},
+	getItem: async key => {
+	  if (db == null){
+		await LS.openDatabase();
+	  }
+	  return (await db).get('dictionary1', key);
+	},
+	setItem: async (key, val) => {
+	  if (db == null){
+		await LS.openDatabase();
+	  }
+	  (await db).put('dictionary1', val, key);
+	},
+};
 
-async function LS_setItem(key, val) {
-	return (await db).put('dictionary1', val, key);
-}
-
-async function openDatabase() {
-    var version = 1;
-    db = await idb.openDB('NuffTabs', 1, {
-      upgrade(db) {
-        db.createObjectStore('dictionary1');
-      },
-    });
-}
 
 // fill in selected options
 async function init() {
-	await openDatabase();
-	var maxTabs = await LS_getItem('maxTabs');
-	var discardCriterion = await LS_getItem('discardCriterion');
-	var ignorePinned = await LS_getItem('ignorePinned');
-	var showCount = await LS_getItem('showCount');
+	var maxTabs = await LS.getItem('maxTabs');
+	var discardCriterion = await LS.getItem('discardCriterion');
+	var ignorePinned = await LS.getItem('ignorePinned');
+	var showCount = await LS.getItem('showCount');
 	
 	if (!maxTabs && !discardCriterion && !ignorePinned && !showCount) {
 		return;
@@ -68,10 +73,10 @@ async function init() {
 }
 
 function saveMe() {
-	LS_setItem('maxTabs', document.getElementById("maxTabs").value);
-	LS_setItem('discardCriterion', document.getElementById("discardCriterion").value);
-	LS_setItem('ignorePinned', document.getElementById("ignorePinned").value);
-	LS_setItem('showCount', document.getElementById("showCount").value);
+	LS.setItem('maxTabs', document.getElementById("maxTabs").value);
+	LS.setItem('discardCriterion', document.getElementById("discardCriterion").value);
+	LS.setItem('ignorePinned', document.getElementById("ignorePinned").value);
+	LS.setItem('showCount', document.getElementById("showCount").value);
 	document.getElementById('messages').innerHTML = "Options saved.";
 	setTimeout(function() {
 		document.getElementById('messages').innerHTML = "";
