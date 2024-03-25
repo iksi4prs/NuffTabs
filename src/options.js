@@ -26,6 +26,7 @@ const LS =  {
 
 // fill in selected options
 async function init() {
+	await hello.world("options");
 	var maxTabs = await LS.getItem('maxTabs');
 	var discardCriterion = await LS.getItem('discardCriterion');
 	var ignorePinned = await LS.getItem('ignorePinned');

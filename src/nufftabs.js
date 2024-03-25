@@ -4,6 +4,8 @@
 // which is annoying to use/debug, so moved to use IndexedDB,
 // using lib called "idb" (see umd.js)
 import './libs/umd.js';
+import './storage.js';
+
 let db = null;
 const LS =  {
   openDatabase: async () => {
@@ -74,7 +76,7 @@ function printTimes() {
 }
 
 async function init() {
-  //await openDatabase();
+  await hello.world("worker");
   
   { // for debug/tests
     await LS.setItem("test", "8021");
