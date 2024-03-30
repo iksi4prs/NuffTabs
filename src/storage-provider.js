@@ -14,12 +14,11 @@
 
 //  im getting closer...
 // "SP" stands for "Storage Provider"
-// TODO ranme for LS to SP
 !function(e, t) {
     "object" == typeof exports && "undefined" != typeof module ?
         t(exports) : "function" == typeof define && define.amd ?
         define(["exports"], t) : t((e = "undefined" != typeof globalThis ?
-        globalThis : e || self).LS = {
+        globalThis : e || self).SP = {
             db : null,
             helloworld : async function(text) {
                 console.log("555001, Hello world !, text: '" + text + "'");
@@ -33,13 +32,13 @@
                 });},
               getItem: async function(key) {
                 if (this.db == null){
-                  await LS.openDatabase();
+                  await SP.openDatabase();
                 }
                 return (await this.db).get('dictionary1', key);
               },
               setItem: async function(key, val) {
                 if (this.db == null){
-                  await LS.openDatabase();
+                  await SP.openDatabase();
                 }
                 (await this.db).put('dictionary1', val, key);
               },
