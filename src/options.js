@@ -1,19 +1,10 @@
-// storage wrapper
-// (migration to manifest v3 required moving from 'localStorage' to 'chrome.storage.local')
-// https://stackoverflow.com/a/70708120
-const LS = {
-    getAllItems: () => chrome.storage.local.get(),
-    getItem: async key => (await chrome.storage.local.get(key))[key],
-    setItem: (key, val) => chrome.storage.local.set({[key]: val}),
-    removeItems: keys => chrome.storage.local.remove(keys),
-  };
-
 // fill in selected options
 async function init() {
-	var maxTabs = await LS.getItem('maxTabs');
-	var discardCriterion = await LS.getItem('discardCriterion');
-	var ignorePinned = await LS.getItem('ignorePinned');
-	var showCount = await LS.getItem('showCount');
+	await SP.helloworld("called from options");
+	var maxTabs = await SP.getItem('maxTabs');
+	var discardCriterion = await SP.getItem('discardCriterion');
+	var ignorePinned = await SP.getItem('ignorePinned');
+	var showCount = await SP.getItem('showCount');
 	
 	if (!maxTabs && !discardCriterion && !ignorePinned && !showCount) {
 		return;
@@ -57,10 +48,10 @@ async function init() {
 }
 
 function saveMe() {
-	LS.setItem('maxTabs', document.getElementById("maxTabs").value);
-	LS.setItem('discardCriterion', document.getElementById("discardCriterion").value);
-	LS.setItem('ignorePinned', document.getElementById("ignorePinned").value);
-	LS.setItem('showCount', document.getElementById("showCount").value);
+	SP.setItem('maxTabs', document.getElementById("maxTabs").value);
+	SP.setItem('discardCriterion', document.getElementById("discardCriterion").value);
+	SP.setItem('ignorePinned', document.getElementById("ignorePinned").value);
+	SP.setItem('showCount', document.getElementById("showCount").value);
 	document.getElementById('messages').innerHTML = "Options saved.";
 	setTimeout(function() {
 		document.getElementById('messages').innerHTML = "";

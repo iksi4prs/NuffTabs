@@ -1,14 +1,7 @@
-// storage wrapper
-// (migration to manifest v3 required moving from 'localStorage' to 'chrome.storage.local')
-// https://stackoverflow.com/a/70708120
-const LS = {
-  getAllItems: () => chrome.storage.local.get(),
-  getItem: async key => (await chrome.storage.local.get(key))[key],
-  setItem: (key, val) => chrome.storage.local.set({[key]: val}),
-  removeItems: keys => chrome.storage.local.remove(keys),
-};
+// need also to import umd.js, as used by storage.gs
+import './libs/umd.js';
+import './storage-provider.js';
 
-import './storage.js'
 
 // variables
 var currentTabId; // ID of currently active tab
@@ -44,21 +37,27 @@ function printTimes() {
   });
 }
 
-// initialize
 async function init() {
+  await SP.helloworld("called from worker");
+  
+  { // for debug/tests
+    await SP.setItem("test", "8021");
+    var test = await SP.getItem("test");
+    console.log("test = " + test);
+  }
 
   // set defaults
-  if (await LS.getItem('discardCriterion') == undefined) {
-    LS.setItem('discardCriterion', 'oldest');
+  if (await SP.getItem('discardCriterion') == undefined) {
+    SP.setItem('discardCriterion', 'oldest');
   }
-  if (await LS.getItem('maxTabs') == undefined) {
-    LS.setItem('maxTabs', 10); // default
+  if (await SP.getItem('maxTabs') == undefined) {
+    SP.setItem('maxTabs', 10); // default
   }
-  if (await LS.getItem('ignorePinned') == undefined) {
-    LS.setItem('ignorePinned', 1);
+  if (await SP.getItem('ignorePinned') == undefined) {
+    SP.setItem('ignorePinned', 1);
   }
-  if (await LS.getItem('showCount') == undefined) {
-    LS.setItem('showCount', 1);
+  if (await SP.getItem('showCount') == undefined) {
+    SP.setItem('showCount', 1);
   }
   
   updateCurrentTabId();
@@ -84,11 +83,11 @@ function createTimes(tabId) {
 
 // update count on badge (only valid for active window)
 async function updateBadge() {
-  if (await LS.getItem('showCount') == '1'){
+  if (await SP.getItem('showCount') == '1'){
     chrome.action.setBadgeBackgroundColor({ color: [0, 0, 0, 92] });
     
     chrome.tabs.query({ lastFocusedWindow: true }, async function(tabs) {
-      if (await LS.getItem('ignorePinned') == '1') {
+      if (await SP.getItem('ignorePinned') == '1') {
         tabs = tabs.filter(function (tab) {
           return !tab.pinned;
         });
@@ -152,7 +151,7 @@ function checkTabAdded(newTabId) {
   // check tabs of current window
   chrome.tabs.query({ currentWindow: true }, async function(tabs) {
 
-    if (await LS.getItem('ignorePinned') == '1') {
+    if (await SP.getItem('ignorePinned') == '1') {
       tabs = tabs.filter(function (tab) {
         return !tab.pinned;
       });
@@ -161,7 +160,7 @@ function checkTabAdded(newTabId) {
     // debugLog("num of tabs: " +tabs.length)
     
     // tab removal criterion
-    maxTabs = await LS.getItem('maxTabs');
+    maxTabs = await SP.getItem('maxTabs');
     while (tabs.length > maxTabs) {
       debugLog("New tab: "+newTabId)
       debugLog("Preparing to remove tab...")
@@ -171,7 +170,7 @@ function checkTabAdded(newTabId) {
       if (tabs[tabInd].id == newTabId) {
         tabInd = 1;
       }
-      switch(await LS.getItem('discardCriterion')) {
+      switch(await SP.getItem('discardCriterion')) {
 
         case 'oldest': // oldest tab
           for (var i=0; i<tabs.length; i++) {
