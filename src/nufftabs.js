@@ -1,45 +1,7 @@
-// storage warpper v#2 - using IndexedDB
-// 'chrome.storage.local' (see why moved to it below),
-// doesn't show in devtools (see: https://stackoverflow.com/a/27432365),
-// which is annoying to use/debug, so moved to use IndexedDB,
-// using lib called "idb" (see umd.js)
+// need also to import umd.js, as used by storage.gs
 import './libs/umd.js';
 import './storage.js';
 
-let db = null;
-const LS =  {
-  openDatabase: async () => {
-    var version = 1;
-    db = await idb.openDB('NuffTabs', 1, {
-      upgrade(db) {
-        db.createObjectStore('dictionary1');
-      },
-    });},
-  getItem: async key => {
-    if (db == null){
-      await LS.openDatabase();
-    }
-    return (await db).get('dictionary1', key);
-  },
-  setItem: async (key, val) => {
-    if (db == null){
-      await LS.openDatabase();
-    }
-    (await db).put('dictionary1', val, key);
-  },
-};
-
-// storage wrapper v#1 - using 'chrome.storage.local'
-// (migration to manifest v3 required moving from 'localStorage' to 'chrome.storage.local')
-// https://stackoverflow.com/a/70708120
-/*
-const LS = {
-  getAllItems: () => chrome.storage.local.get(),
-  getItem: async key => (await chrome.storage.local.get(key))[key],
-  setItem: (key, val) => chrome.storage.local.set({[key]: val}),
-  removeItems: keys => chrome.storage.local.remove(keys),
-};
-*/
 
 // variables
 var currentTabId; // ID of currently active tab
@@ -76,7 +38,7 @@ function printTimes() {
 }
 
 async function init() {
-  await hello.world("worker");
+  await LS.world("worker");
   
   { // for debug/tests
     await LS.setItem("test", "8021");

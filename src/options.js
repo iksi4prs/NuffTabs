@@ -1,32 +1,6 @@
-// see notes about storage/database in the js file of worker.
-// TODO (low prio)- move 2 copies of LS to one file.
-let db = null;
-const LS =  {
-	openDatabase: async () => {
-	  var version = 1;
-	  db = await idb.openDB('NuffTabs', 1, {
-		upgrade(db) {
-		  db.createObjectStore('dictionary1');
-		},
-	  });},
-	getItem: async key => {
-	  if (db == null){
-		await LS.openDatabase();
-	  }
-	  return (await db).get('dictionary1', key);
-	},
-	setItem: async (key, val) => {
-	  if (db == null){
-		await LS.openDatabase();
-	  }
-	  (await db).put('dictionary1', val, key);
-	},
-};
-
-
 // fill in selected options
 async function init() {
-	await hello.world("options");
+	await LS.world("options");
 	var maxTabs = await LS.getItem('maxTabs');
 	var discardCriterion = await LS.getItem('discardCriterion');
 	var ignorePinned = await LS.getItem('ignorePinned');
