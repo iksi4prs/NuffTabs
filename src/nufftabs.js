@@ -1,6 +1,6 @@
 // need also to import umd.js, as used by storage.gs
 import './libs/umd.js';
-import './storage.js';
+import './storage-provider.js';
 
 
 // variables
