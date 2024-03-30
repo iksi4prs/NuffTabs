@@ -38,7 +38,7 @@ function printTimes() {
 }
 
 async function init() {
-  await LS.world("worker");
+  await LS.helloworld("called from worker");
   
   { // for debug/tests
     await LS.setItem("test", "8021");

@@ -21,8 +21,8 @@
         define(["exports"], t) : t((e = "undefined" != typeof globalThis ?
         globalThis : e || self).LS = {
             db : null,
-            world : async function(text) {
-                console.log("Hello, world 77: " + text);
+            helloworld : async function(text) {
+                console.log("555001, Hello world !, text: '" + text + "'");
             },
             openDatabase: async function() {
                 var version = 1;
@@ -46,7 +46,7 @@
         })
     }(this, (function(e) {
         // "use strict";
-        // async function world() {
+        // async function helloworld() {
         // console.log("Hello, world 33!");
     //}
 }));

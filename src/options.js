@@ -1,6 +1,6 @@
 // fill in selected options
 async function init() {
-	await LS.world("options");
+	await LS.helloworld("called from options");
 	var maxTabs = await LS.getItem('maxTabs');
 	var discardCriterion = await LS.getItem('discardCriterion');
 	var ignorePinned = await LS.getItem('ignorePinned');
