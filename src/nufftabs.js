@@ -231,7 +231,7 @@ function checkTabAdded(newTabId) {
       
       var tabId = tabs[tabInd].id;
       
-      var bookmark = true;
+      var bookmark = false;
       if (bookmark){
         // TODO - check if not already exists as bookmark
         // first need to stop loop, bcz timer keep seeing tab was not removed,
@@ -246,18 +246,19 @@ function checkTabAdded(newTabId) {
           var url = tab.url;
           var bookmarkTitle = title + " #autoclosed";
           addBookmark(bookmarkTitle, url);
-          removeTab(tabs, tabId);
+          removeTab(tabs, tabInd);
           
         });
       } else{
-        removeTab(tabs, tabId);
+        removeTab(tabs, tabInd);
       }
     }
     updateBadge();
   });
 }
 
-function removeTab(tabs, tabId){
+function removeTab(tabs, tabInd){
+      var tabId = tabs[tabInd].id;
       //debugLog('Chosen: '+tabId)
       chrome.tabs.get(tabId, function(tab){
         debugLog('Removing tab '+tab.id+': "'+tab.title+'", active time '+(Math.floor(tabTimes[tab.id].totalActive/10)/100)+'s, last active: '+tabTimes[tab.id].lastActive);
