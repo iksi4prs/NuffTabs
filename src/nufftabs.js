@@ -10,7 +10,7 @@ var startActive; // time at which active tab started being active
 var tabTimes = new Array(); // array with activity times (tab times table)
 
 var debug = true; // debug boolean
-var debugStopLoop = false;
+var debugStopLoop = false; // TODO: maybe this should be used always, not just for debug ?
 
 function debugLog(string) {
   if (debug) {
@@ -231,7 +231,7 @@ function checkTabAdded(newTabId) {
       
       var tabId = tabs[tabInd].id;
       
-      var bookmark = false;
+      var bookmark = true;
       if (bookmark){
         // TODO - check if not already exists as bookmark
         // first need to stop loop, bcz timer keep seeing tab was not removed,
@@ -247,7 +247,6 @@ function checkTabAdded(newTabId) {
           var bookmarkTitle = title + " #autoclosed";
           addBookmark(bookmarkTitle, url);
           removeTab(tabs, tabInd);
-          
         });
       } else{
         removeTab(tabs, tabInd);
@@ -323,6 +322,11 @@ function addBookmark(title, url){
 
   debugLog("555002, addBookmark: "+ url)
 
+  if (url.indexOf("chrome://newtab") == 0){
+    debugLog("555005, addBookmark - skipped for (reason 'ignorelist') : " + url)
+    debugStopLoop = false; // can enable now
+    return;
+  }
   // example:
   //https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/api-samples/bookmarks/popup.js
 
@@ -344,6 +348,7 @@ function addBookmark(title, url){
     (bookmarkTreeNode) => {
       // https://developer.chrome.com/docs/extensions/reference/api/bookmarks#type-BookmarkTreeNode
       debugLog("555004, bookmarks.create result:" + bookmarkTreeNode.id);
+      debugStopLoop = false; // can enable now
     }
   );
 }
