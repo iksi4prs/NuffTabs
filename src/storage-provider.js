@@ -12,7 +12,9 @@
 // which is annoying to use/debug, so moved to use IndexedDB,
 // using lib called "idb" (see umd.js)
 
-//  im getting closer...
+
+// !! To check the db in devtools, inspect the popup, not worker service.
+
 // "SP" stands for "Storage Provider"
 !function(e, t) {
     "object" == typeof exports && "undefined" != typeof module ?
@@ -24,10 +26,12 @@
                 console.log("555001, Hello world !, text: '" + text + "'");
             },
             openDatabase: async function() {
+                var dbName = 'NuffTabs';
                 var version = 1;
-                this.db = await idb.openDB('NuffTabs', 1, {
-                  upgrade() {
-                    this.db.createObjectStore('dictionary1');
+                // https://github.com/jakearchibald/idb?tab=readme-ov-file#opendb
+                this.db = await idb.openDB(dbName, version, {
+                  upgrade(db, oldVersion, newVersion, transaction, event) {
+                    db.createObjectStore('dictionary1');
                   },
                 });},
               getItem: async function(key) {
