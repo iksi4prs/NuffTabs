@@ -343,7 +343,7 @@ function addBookmark(title, url){
     },
     (bookmarkTreeNode) => {
       // https://developer.chrome.com/docs/extensions/reference/api/bookmarks#type-BookmarkTreeNode
-      debugLog("ookmarks.create result:" + bookmarkTreeNode.id);
+      debugLog("555004, bookmarks.create result:" + bookmarkTreeNode.id);
     }
   );
 }
