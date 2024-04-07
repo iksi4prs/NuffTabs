@@ -10,6 +10,7 @@ var startActive; // time at which active tab started being active
 var tabTimes = new Array(); // array with activity times (tab times table)
 
 var debug = true; // debug boolean
+var debugStopLoop = false;
 
 function debugLog(string) {
   if (debug) {
@@ -162,6 +163,10 @@ function checkTabAdded(newTabId) {
     // tab removal criterion
     maxTabs = await SP.getItem('maxTabs');
     while (tabs.length > maxTabs) {
+      if (debugStopLoop == true){
+        debugLog("555003, debugStopLoop => break");
+        break;
+      }
       debugLog("New tab: "+newTabId)
       debugLog("Preparing to remove tab...")
       printTimes();
@@ -226,6 +231,33 @@ function checkTabAdded(newTabId) {
       
       var tabId = tabs[tabInd].id;
       
+      var bookmark = true;
+      if (bookmark){
+        // TODO - check if not already exists as bookmark
+        // first need to stop loop, bcz timer keep seeing tab was not removed,
+        // so trying to call it again and agaim
+        if (debugStopLoop != true){
+          debugStopLoop = true;
+        }
+          
+        debugLog("555001, Try add bookmark")
+        chrome.tabs.get(tabId, function(tab){
+          var title = tab.title;
+          var url = tab.url;
+          var bookmarkTitle = title + " #autoclosed";
+          addBookmark(bookmarkTitle, url);
+          removeTab(tabs, tabId);
+          
+        });
+      } else{
+        removeTab(tabs, tabId);
+      }
+    }
+    updateBadge();
+  });
+}
+
+function removeTab(tabs, tabId){
       //debugLog('Chosen: '+tabId)
       chrome.tabs.get(tabId, function(tab){
         debugLog('Removing tab '+tab.id+': "'+tab.title+'", active time '+(Math.floor(tabTimes[tab.id].totalActive/10)/100)+'s, last active: '+tabTimes[tab.id].lastActive);
@@ -237,11 +269,8 @@ function checkTabAdded(newTabId) {
       chrome.tabs.remove(tabId, function() {});
       tabs.splice(tabInd,1); // remove from list
       //removeTimes(tabId);
-    }
-    updateBadge();
-  });
-}
 
+}
 // remove entry from tab times table
 function removeTimes(tabId) {
   delete tabTimes[tabId];
@@ -283,5 +312,44 @@ chrome.windows.onFocusChanged.addListener(function(windowId) {
   updateTimesAndId();
   updateBadge();
 });
+
+
+function addBookmark(title, url){
+
+  // TODO - add in dedicated folder of auto-closed,
+  // with sub-folder per day
+  // for now just create in root
+
+  debugLog("555002, addBookmark: "+ url)
+
+  // example:
+  //https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/api-samples/bookmarks/popup.js
+
+  // Limits of API, as in DOCS:
+  // "Note: You cannot use this API to add or remove entries in the root folder. 
+  // You also cannot rename, move, 
+  // or remove the special "Bookmarks Bar" and "Other Bookmarks" folders."
+
+  // id is based on trial & error
+  const BOOKMARKS_BAR_ID = '1';
+  var folderId = BOOKMARKS_BAR_ID;
+
+  chrome.bookmarks.create(
+    {
+      parentId: folderId,
+      title: title,
+      url: url
+    },
+    (bookmarkTreeNode) => {
+      // https://developer.chrome.com/docs/extensions/reference/api/bookmarks#type-BookmarkTreeNode
+      debugLog("ookmarks.create result:" + bookmarkTreeNode.id);
+    }
+  );
+}
+
+// TODO
+// https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/api-samples/bookmarks/popup.js
+function findBookmarkFolder(){
+}
 
 init();
